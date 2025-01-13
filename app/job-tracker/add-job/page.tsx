@@ -1,13 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import FormInput from '@/components/FormInput';
+import { useRouter } from 'next/navigation';
 
+interface FormState {
+  company: string;
+  position: string;
+  status: string;
+  date_applied: string;
+  notes: string;
+}
 
 export default function AddJob() {
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<FormState>({
     company: '',
     position: '',
     status: 'Applied',
@@ -25,12 +31,6 @@ export default function AddJob() {
     e.preventDefault();
     setLoading(true);
 
-    if (!form.company || !form.position) {
-      alert('Company and Position are required fields!');
-      setLoading(false);
-      return;
-    }
-
     try {
       const { error } = await supabase.from('jobs').insert([form]);
       if (error) throw error;
@@ -46,51 +46,72 @@ export default function AddJob() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between">
-      <div className="p-6 max-w-lg mx-auto">
+    <div className="min-h-screen flex flex-col justify-center items-center">
+      <form onSubmit={handleSubmit} className="bg-white shadow-md p-6 rounded-lg w-full max-w-lg">
         <h2 className="text-3xl font-bold mb-6 text-center">Add a New Job</h2>
-        <form onSubmit={handleSubmit} className="bg-white shadow-md p-6 rounded-lg">
-          <FormInput
-            label="Company"
+        <div className="mb-4">
+          <label className="block font-bold mb-2">Company</label>
+          <input
+            type="text"
             name="company"
             value={form.company}
             onChange={handleChange}
+            required
+            className="w-full border rounded px-3 py-2"
           />
-          <FormInput
-            label="Position"
+        </div>
+        <div className="mb-4">
+          <label className="block font-bold mb-2">Position</label>
+          <input
+            type="text"
             name="position"
             value={form.position}
             onChange={handleChange}
+            required
+            className="w-full border rounded px-3 py-2"
           />
-          <FormInput
-            label="Status"
+        </div>
+        <div className="mb-4">
+          <label className="block font-bold mb-2">Status</label>
+          <select
             name="status"
             value={form.status}
             onChange={handleChange}
-          />
-          <FormInput
-            label="Date Applied"
-            name="date_applied"
+            className="w-full border rounded px-3 py-2"
+          >
+            <option value="Applied">Applied</option>
+            <option value="Interviewing">Interviewing</option>
+            <option value="Offered">Offered</option>
+            <option value="Rejected">Rejected</option>
+          </select>
+        </div>
+        <div className="mb-4">
+          <label className="block font-bold mb-2">Date Applied</label>
+          <input
             type="date"
+            name="date_applied"
             value={form.date_applied}
             onChange={handleChange}
+            className="w-full border rounded px-3 py-2"
           />
-          <FormInput
-            label="Notes"
+        </div>
+        <div className="mb-4">
+          <label className="block font-bold mb-2">Notes</label>
+          <textarea
             name="notes"
-            type="textarea"
             value={form.notes}
             onChange={handleChange}
+            className="w-full border rounded px-3 py-2"
           />
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-blue-600 text-white py-2 px-4 rounded w-full hover:bg-blue-500"
-          >
-            {loading ? 'Adding...' : 'Add Job'}
-          </button>
-        </form>
-      </div>
+        </div>
+        <button
+          type="submit"
+          className="bg-blue-600 text-white w-full py-2 rounded hover:bg-blue-700"
+          disabled={loading}
+        >
+          {loading ? 'Adding...' : 'Add Job'}
+        </button>
+      </form>
     </div>
   );
 }

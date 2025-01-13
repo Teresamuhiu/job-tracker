@@ -3,9 +3,18 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
+interface Job {
+  id: string;
+  company: string;
+  position: string;
+  status: string;
+  date_applied: string;
+  notes: string;
+}
+
 export default function JobTrackerPage() {
-  const [jobs, setJobs] = useState([]);
-  const [editJob, setEditJob] = useState(null); // Stores the job being edited
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [editJob, setEditJob] = useState<Job | null>(null);
   const [updatedStatus, setUpdatedStatus] = useState('');
   const [updatedNotes, setUpdatedNotes] = useState('');
 
@@ -13,35 +22,34 @@ export default function JobTrackerPage() {
     async function fetchJobs() {
       const { data, error } = await supabase.from('jobs').select('*');
       if (error) console.error(error);
-      else setJobs(data);
+      else setJobs(data || []);
     }
     fetchJobs();
   }, []);
 
-  const handleEdit = (job) => {
+  const handleEdit = (job: Job) => {
     setEditJob(job);
     setUpdatedStatus(job.status);
     setUpdatedNotes(job.notes);
   };
 
   const handleSave = async () => {
+    if (!editJob) return;
+
     const { data, error } = await supabase
       .from('jobs')
       .update({ status: updatedStatus, notes: updatedNotes })
       .eq('id', editJob.id)
-      .select(); // Ensure it returns the updated data
-    
+      .select();
+
     if (error) {
-      console.error("Update Error:", error);
+      console.error('Error updating job:', error);
     } else if (data && data.length > 0) {
-      setJobs(jobs.map((job) => (job.id === editJob.id ? data[0] : job))); // Update the job list
-      setEditJob(null);
-    } else {
-      console.warn("Update successful, but no data returned.");
+      setJobs(jobs.map((job) => (job.id === editJob.id ? data[0] : job)));
+      alert('Job updated successfully!');
     }
+    setEditJob(null);
   };
-  
-  
 
   return (
     <main className="p-6 max-w-6xl mx-auto">
@@ -55,13 +63,13 @@ export default function JobTrackerPage() {
             {editJob?.id === job.id ? (
               <>
                 <h2 className="text-xl font-bold mb-2">{job.company}</h2>
-                <p className="mb-2 text-gray-600">Position: {job.position}</p>
+                <p className="mb-2">Position: {job.position}</p>
                 <div className="mb-4">
-                  <label className="block font-semibold text-gray-700">Status:</label>
+                  <label className="block mb-1">Status:</label>
                   <select
                     value={updatedStatus}
                     onChange={(e) => setUpdatedStatus(e.target.value)}
-                    className="border rounded px-3 py-2 w-full"
+                    className="w-full border px-3 py-2 rounded"
                   >
                     <option value="Applied">Applied</option>
                     <option value="Interviewing">Interviewing</option>
@@ -70,41 +78,30 @@ export default function JobTrackerPage() {
                   </select>
                 </div>
                 <div className="mb-4">
-                  <label className="block font-semibold text-gray-700">Notes:</label>
+                  <label className="block mb-1">Notes:</label>
                   <textarea
                     value={updatedNotes}
                     onChange={(e) => setUpdatedNotes(e.target.value)}
-                    className="border rounded px-3 py-2 w-full"
-                    rows={4}
-                  ></textarea>
+                    className="w-full border px-3 py-2 rounded"
+                  />
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleSave}
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                  >
-                    Save
-                  </button>
-                  <button
-                    onClick={() => setEditJob(null)}
-                    className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
-                  >
-                    Cancel
-                  </button>
-                </div>
+                <button onClick={handleSave} className="mr-2 bg-blue-600 text-white px-4 py-2 rounded">
+                  Save
+                </button>
+                <button onClick={() => setEditJob(null)} className="bg-gray-400 text-white px-4 py-2 rounded">
+                  Cancel
+                </button>
               </>
             ) : (
               <>
-                <h2 className="text-xl font-bold mb-2 text-blue-600">{job.company}</h2>
-                <p className="mb-2 text-gray-600">Position: {job.position}</p>
-                <p className="mb-2 text-gray-600">Status: {job.status}</p>
-                <p className="mb-2 text-gray-600">
-                  Date Applied: {new Date(job.date_applied).toLocaleDateString()}
-                </p>
-                <p className="mb-4 text-gray-600">Notes: {job.notes}</p>
+                <h2 className="text-xl font-bold mb-2">{job.company}</h2>
+                <p className="mb-2">Position: {job.position}</p>
+                <p className="mb-2">Status: {job.status}</p>
+                <p className="mb-2">Date Applied: {new Date(job.date_applied).toLocaleDateString()}</p>
+                <p className="mb-2">Notes: {job.notes}</p>
                 <button
                   onClick={() => handleEdit(job)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  className="bg-blue-600 text-white px-4 py-2 rounded"
                 >
                   Edit
                 </button>
