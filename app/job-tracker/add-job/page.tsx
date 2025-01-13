@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import FormInput from '@/components/FormInput';
-import Footer from '@/components/Footer';
+
 
 export default function AddJob() {
   const [form, setForm] = useState({
